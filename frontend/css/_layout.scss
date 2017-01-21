@@ -1,0 +1,14 @@
+.drawer {
+  position: fixed;
+  width: 240px;
+  height: 100%;
+}
+
+.main-wrapper {
+  margin-left: 240px;
+  min-height: 100%;
+}
+
+html, body {
+  height: 100%;
+}
