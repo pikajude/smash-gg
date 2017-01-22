@@ -13,6 +13,8 @@ import           Head
 import           Reflex.Dom         hiding (Home)
 
 import qualified Pages.Home
+import qualified Pages.Rankings
+import qualified Pages.Results
 import           Widgets.Navigation
 
 main = mainWidgetWithHead' $ (,) pageHead $ \ _ -> do
@@ -23,7 +25,9 @@ main = mainWidgetWithHead' $ (,) pageHead $ \ _ -> do
 
 homePage = divClass "columns" $ text "Hello, world!"
 
-pageMap Home = Pages.Home.page
+pageMap Home     = Pages.Home.page
+pageMap Results  = Pages.Results.page
+pageMap Rankings = Pages.Rankings.page
 
 pageHead _ = do
     el "title" $ text "Hello, world!"

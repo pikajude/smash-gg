@@ -37,8 +37,9 @@ let
     stripRoot = false;
   };
 
-  backendSrc = filterHsSource ./backend;
-  frontendSrc = filterHsSource ./frontend;
+  allSrc = filterHsSource ./.;
+  backendSrc = "${allSrc}/backend";
+  frontendSrc = "${allSrc}/frontend";
 
   filterHsSource = builtins.filterSource (path: type: !(
     baseNameOf path == ".git" ||
@@ -54,24 +55,16 @@ let
       '';
     })
   ) {};
-  frontendBase = with pkgs.haskell.lib; (reflex-platform.ghcjs.override {
-    overrides = self: super: {
-      # text = overrideCabal super.text (drv: {
-      #   prePatch = ''
-      #     # haddock parse error
-      #     sed -i '9d' Data/JSString/Text.hs
-      #   '';
-      # });
-    };
-  }).callPackage (reflex-platform.cabal2nixResult frontendSrc) {};
+  frontendBase = with pkgs.haskell.lib; reflex-platform.ghcjs.callPackage
+    (reflex-platform.cabal2nixResult frontendSrc) {};
 
-  versionTag = "abcdef"; # lib.substring 0 7 (lib.commitIdFromGitRepo ./.git);
+  versionTag = lib.substring 0 7 (lib.commitIdFromGitRepo ./.git);
 
   backend = pkgs.haskell.lib.overrideCabal backendBase (drv: rec {
     configureFlags = (drv.configureFlags or []) ++ [ "-fproduction" ];
-    src = "${./.}/backend";
+    src = allSrc;
+    preCompileBuildDriver = "pushd backend";
     buildTools = (drv.buildTools or [])
-      ++ [ pkgs.sass nodePkgs.cssnano-cli ]
       ++ lib.optionals inNixShell [
         pkgs.nodePackages.bower haskellPackages.cabal-install
       ];
@@ -80,8 +73,10 @@ let
 
   frontend = pkgs.haskell.lib.overrideCabal frontendBase (drv: rec {
     configureFlags = (drv.configureFlags or []) ++ [ "-fproduction" ];
-    src = "${./.}/frontend";
-    buildTools = (drv.buildTools or []) ++ [ pkgs.openjdk ];
+    src = allSrc;
+    preCompileBuildDriver = "pushd frontend";
+    buildTools = (drv.buildTools or [])
+      ++ [ pkgs.openjdk pkgs.sass nodePkgs.cssnano-cli ];
     postInstall = ''
       cd $out/bin/frontend.jsexe
       for file in $(find . -name '*.js'); do
