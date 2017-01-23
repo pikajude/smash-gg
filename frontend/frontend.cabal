@@ -24,6 +24,7 @@ executable frontend
                      , containers
                      , directory
                      , file-embed
+                     , ghcjs-dom
                      , process-extras
                      , reflex-dom
                      , template-haskell

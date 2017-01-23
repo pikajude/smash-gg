@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE RecursiveDo           #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
@@ -6,11 +7,14 @@
 module Main where
 
 import           API
-import qualified Data.Map           as M
+import           Control.Monad.Fix
+import           Control.Monad.IO.Class
+import qualified Data.Map               as M
 import           Data.Monoid
 import           Data.Text.Encoding
+import           GHCJS.DOM.Types        (IsElement)
 import           Head
-import           Reflex.Dom         hiding (Home)
+import           Reflex.Dom             hiding (Home)
 
 import qualified Pages.Home
 import qualified Pages.Rankings
@@ -18,13 +22,18 @@ import qualified Pages.Results
 import           Widgets.Navigation
 
 main = mainWidgetWithHead' $ (,) pageHead $ \ _ -> do
-    navigationEvent <- navbar
+    rec topEvent <- navbar
 
-    divClass "main-wrapper clearfix" $
-        widgetHold Pages.Home.page $ pageMap <$> navigationEvent
+        pageNavEvent <- divClass "main-wrapper clearfix" $
+             widgetHold Pages.Home.page $ pageMap <$> navigationEvent
 
-homePage = divClass "columns" $ text "Hello, world!"
+        let navigationEvent = leftmost [topEvent, switch $ current pageNavEvent]
+    return ()
 
+pageMap :: (Reflex t, MonadFix m, DomBuilder t m, MonadHold t m, PostBuild t m, MonadIO m
+           , IsElement (RawElement (DomBuilderSpace m)), HasWebView m, TriggerEvent t m
+           , MonadIO (Performable m), PerformEvent t m)
+        => Page -> m (Event t Page)
 pageMap Home     = Pages.Home.page
 pageMap Results  = Pages.Results.page
 pageMap Rankings = Pages.Rankings.page

@@ -9,5 +9,10 @@
 @include foundation-button;
 @include foundation-typography;
 @include foundation-float-classes;
+@include foundation-thumbnail;
 
 @import 'layout';
+@import 'banner';
+
+@import 'https://fonts.googleapis.com/css?family=Oswald:300,400,700';
+// @import 'https://fonts.googleapis.com/css?family=Roboto:400,300,100,400italic,300italic,100italic,500,500italic,700,700italic';

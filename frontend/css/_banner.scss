@@ -1,0 +1,78 @@
+.banner {
+  padding: 102px 60px 20px;
+  // background-color: #333;
+  position: relative;
+  overflow: hidden;
+
+  color: white;
+  font-size: 14px;
+
+  .bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: auto;
+    background-size: cover;
+    background-image: radial-gradient(50% 147%, rgba(80, 54, 91, 0.4) 47%, rgba(70, 34, 34, 0.658824) 100%),
+      url(https://images.smash.gg/images/tournament/2018/image-23f4f989c5f58847b3808c1984996669.jpg);
+    background-position: 50% 50%;
+    filter: blur(8px) brightness(73%);
+    margin: -16px;
+    overflow: hidden;
+  }
+
+  .carousel {
+    transition: margin-left 0.5s;
+
+    .carousel-item {
+      float: left;
+      margin-right: 60px;
+    }
+  }
+
+  .row {
+    position: relative;
+    z-index: 5;
+  }
+
+  img {
+    width: 100%;
+  }
+
+  h3 a {
+    color: white;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .button {
+    font-family: $header-font-family;
+
+    &.hollow {
+      border-color: white;
+      color: white;
+    }
+  }
+
+  ol.indicators {
+    text-align: center;
+    list-style: none;
+    margin: 0;
+    margin-top: 40px;
+
+    li {
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+      border: 1px solid #ffffff;
+      border-radius: 10px;
+      margin: 5px;
+      cursor: pointer;
+
+      &.active {
+        background-color: #ffffff;
+      }
+    }
+  }
+}
