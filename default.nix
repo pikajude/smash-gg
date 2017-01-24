@@ -71,7 +71,7 @@ let
     version = "${drv.version}-${versionTag}";
   });
 
-  frontend = pkgs.haskell.lib.overrideCabal frontendBase (drv: rec {
+  frontend = (pkgs.haskell.lib.overrideCabal frontendBase (drv: rec {
     configureFlags = (drv.configureFlags or []) ++ [ "-fproduction" ];
     src = allSrc;
     preCompileBuildDriver = "pushd frontend";
@@ -86,6 +86,10 @@ let
       done
     '';
     version = "${drv.version}-${versionTag}";
+  })).overrideScope (self: super: {
+    mkDerivation = args: super.mkDerivation (args // {
+      doHaddock = !(builtins.elem args.pname [ "MemoTrie" "fail" "text" ]);
+    });
   });
 
 in {

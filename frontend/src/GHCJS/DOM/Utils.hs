@@ -18,14 +18,15 @@ windowSize = do
     ev <- wrapDomEvent window (`DOM.on` DOM.resize) $ dimensions window
     pb <- delay 0 =<< getPostBuild
     ev2 <- performEvent $ ffor pb $ \ _ -> dimensions window
-    initial <- dimensions window
-    holdDyn initial $ leftmost [ev, ev2]
+    holdDyn (0, 0) $ leftmost [ev, ev2]
     where
         dimensions w = liftA2 (,) (DOM.getInnerWidth w) (DOM.getInnerHeight w)
 
 elementSize e = do
     resize <- windowSize
-    sizeEv <- performEvent $ ffor (updated resize) $ \ _ -> owidth
-    holdDyn 0 sizeEv
+    sizeEv <- performEvent $ ffor (updated resize) $ \ _ -> liftIO dimensions
+    holdDyn (0, 0) sizeEv
     where
-        owidth = liftIO $ DOM.getOffsetWidth $ _element_raw e
+        dimensions = liftA2 (,)
+            (DOM.getOffsetWidth $ _element_raw e)
+            (DOM.getOffsetHeight $ _element_raw e)

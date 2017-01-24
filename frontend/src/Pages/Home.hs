@@ -21,10 +21,12 @@ import           Reflex.Dom
 banner = do
     rec (b, l) <- elClass' "div" "banner" $ do
             divClass "bg" blank
-            parentWidth <- elementSize b
+            parentWidth <- fmap fst <$> elementSize b
 
-            rec link' <- elDynAttr "div" (carouselAttrs $ zipDyn offset parentWidth) $
-                    leftmost <$> mapM (carouselEntry parentWidth) tourneyList
+            rec let sizeCtx = zipDyn offset parentWidth
+
+                link' <- elDynAttr "div" (carouselAttrs sizeCtx) $
+                    leftmost <$> mapM (carouselEntry sizeCtx) (zip [0..] tourneyList)
 
                 offset <- divClass "row" $ divClass "columns large-4 large-offset-4" $
                     indicators $ length tourneyList
@@ -40,8 +42,8 @@ banner = do
 
 carouselEntry :: forall a m t .
               (PostBuild t m, DomBuilder t m, MonadFix m, Show a, Num a, MonadHold t m)
-              => Dynamic t a -> Tournament -> m (Event t Page)
-carouselEntry widthDyn T{..} = elDynAttr "div" itemAttrs $ divClass "row" $ do
+              => Dynamic t (Int, a) -> (Int, Tournament) -> m (Event t Page)
+carouselEntry sizeDyn (ix1, T{..}) = elDynAttr "div" itemAttrs $ divClass "row" $ do
     divClass "columns large-7" $ elAttr "img" ("src" =: preview) $ return ()
 
     divClass "columns large-5" $ do
@@ -80,8 +82,9 @@ carouselEntry widthDyn T{..} = elDynAttr "div" itemAttrs $ divClass "row" $ do
 
         return $ leftmost [ Tournament slug <$ _link_clicked tourneyLink, attendLink ]
     where
-        itemAttrs = ffor widthDyn $ \ w -> ("class" =: "carousel-item"
-                                         <> "style" =: T.pack ("width: " ++ show (w - 120) ++ "px"))
+        itemAttrs = ffor sizeDyn $
+            \ (i, w) -> ("class" =: ("carousel-item" <> bool " hidden" "" (i == ix1))
+                      <> "style" =: T.pack ("width: " ++ show (w - 120) ++ "px"))
 
 page = do
     (divEl, e) <- banner

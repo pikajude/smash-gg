@@ -21,11 +21,15 @@
   }
 
   .carousel {
-    transition: margin-left 0.5s;
+    // transition: margin-left 0.5s;
 
     .carousel-item {
       float: left;
       margin-right: 60px;
+
+      &.hidden {
+        visibility: hidden;
+      }
     }
   }
 
