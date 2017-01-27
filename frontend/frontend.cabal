@@ -21,15 +21,24 @@ executable frontend
   -- other-extensions:    
   build-depends:       base >=4.9 && <4.10
                      , bytestring
+                     , cereal
+                     , cereal-text
                      , containers
                      , directory
                      , file-embed
                      , ghcjs-dom
+                     , lens
                      , process-extras
                      , reflex-dom
                      , template-haskell
                      , text
+                     , uri-bytestring
+                     , web-routes
   hs-source-dirs:      src, ../shared
   default-language:    Haskell2010
   default-extensions:  NoMonomorphismRestriction
                        OverloadedStrings
+  ghc-options:         -Wall
+
+  if impl(ghcjs)
+    build-depends:     ghcjs-base

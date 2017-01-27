@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Widgets.Navigation where
 
@@ -9,24 +10,27 @@ navbar = divClass "drawer" $ do
     home <- elClass "h4" "home-link" $ linkFor Home $ link "smash.gg"
     others <- elClass "ul" "fa-ul" $ leftmost <$> sequence
         [ el "li" $ do
-            elClass "i" "fa-li fa fa-calendar" blank
             linkFor Tournaments $ do
+                elClass "i" "fa-li fa fa-calendar" blank
                 elClass "i" "fa fa-circle" blank
-                link "Tournaments"
+                text "Tournaments"
         , el "li" $ do
-            elClass "i" "fa-li fa fa-trophy" blank
             linkFor Results $ do
+                elClass "i" "fa-li fa fa-trophy" blank
                 elClass "i" "fa fa-circle" blank
-                link "Results"
+                text "Results"
         , el "li" $ do
-            elClass "i" "fa-li fa fa-rocket" blank
             linkFor Rankings $ do
+                elClass "i" "fa-li fa fa-rocket" blank
                 elClass "i" "fa fa-circle" blank
-                link "Rankings"
+                text "Rankings"
         , el "li" $ do
             elClass "i" "fa-li fa fa-user" blank
-            linkFor UserHome $ link "Xanax"
+            linkFor UserHome $ text "Xanax"
         ]
     return $ leftmost [home, others]
     where
-        linkFor p t = (p <$) . _link_clicked <$> t
+        linkFor p t = do
+            (a, _) <- el' "a" t
+            return $ p <$ domEvent Click a
+

@@ -15,9 +15,12 @@ windowSize = do
     wv <- askWebView
     Just doc <- liftIO $ DOM.webViewGetDomDocument $ unWebViewSingleton wv
     Just window <- liftIO $ DOM.getDefaultView doc
+
     ev <- wrapDomEvent window (`DOM.on` DOM.resize) $ dimensions window
+
     pb <- delay 0 =<< getPostBuild
     ev2 <- performEvent $ ffor pb $ \ _ -> dimensions window
+
     holdDyn (0, 0) $ leftmost [ev, ev2]
     where
         dimensions w = liftA2 (,) (DOM.getInnerWidth w) (DOM.getInnerHeight w)

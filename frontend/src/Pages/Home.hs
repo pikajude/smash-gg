@@ -38,7 +38,7 @@ banner = do
             -> ("class" =: "carousel clearfix"
              <> "style" =: (T.pack ("width:" ++ show ((round width - 60) * length tourneyList) ++ "px;")
                          <> T.pack ("margin-left:" ++ show (negate $ off * (round width - 60)) ++ "px;")))
-        tourneyList = replicate 3 g4
+        tourneyList = [g4, beast7, g4, beast7]
 
 carouselEntry :: forall a m t .
               (PostBuild t m, DomBuilder t m, MonadFix m, Show a, Num a, MonadHold t m)
@@ -54,25 +54,31 @@ carouselEntry sizeDyn (ix1, T{..}) = elDynAttr "div" itemAttrs $ divClass "row" 
                 el "li" $ do
                     elClass "i" "fa-li fa fa-calendar" blank
                     text date
-                el "li" $ do
+                forM_ location $ \ l -> el "li" $ do
                     elClass "i" "fa-li fa fa-map-marker" blank
-                    text location
+                    text l
                 l1 <- el "li" $ do
+                    let (shown, unshown) = splitAt 4 events
                     elClass "i" "fa-li fa fa-gamepad" blank
-                    text $ T.intercalate ", " events
+                    text $ T.intercalate ", " shown
                     el "br" blank
-                    link "show 10 more events"
+                    if null unshown
+                        then return never
+                        else fmap _link_clicked $ link $ T.pack $ "show " ++ show (length unshown) ++ " more events"
                 l2 <- el "li" $ do
                     elClass "i" "fa-li fa fa-users" blank
                     link $ T.pack $ show attendees ++ " Attendees"
 
-                return $ leftmost [ Attendees slug <$ _link_clicked l1
-                                  , Events slug <$ _link_clicked l2
+                return $ leftmost [ Events slug <$ l1
+                                  , Attendees slug <$ _link_clicked l2
                                   ]
 
-            elClass "a" "button large" $ text "Fantasy"
+            let (btn1, btn2) = if started then ("Brackets", "Shop")
+                                          else ("Register", "Compendium")
+
+            elClass "a" "button large" $ text btn1
             text " "
-            rec (ladderLink, _) <- elDynClass' "a" classDyn $ text "Ladders"
+            rec (ladderLink, _) <- elDynClass' "a" classDyn $ text btn2
                 let on = domEvent Mouseover ladderLink :: Event t ()
                     off = domEvent Mouseout ladderLink :: Event t ()
                 isHollow <- holdDyn True $ leftmost [False <$ on, True <$ off]
