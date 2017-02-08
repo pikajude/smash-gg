@@ -27,20 +27,21 @@ import           Widgets.Navigation
 
 main = mainWidgetWithHead' $ (,) pageHead $ \ _ -> do
     topEvent <- navbar
+    postBuild <- getPostBuild
 
     rec routeText <- partialPathRoute "" (toPathInfo <$> pageNav)
         let route :: Dynamic _ (Either String Page)
             route = parseSegments fromPathSegments <$> routeText
 
-            serverMsg :: Event _ (Either String Page)
-            serverMsg = S.decode <$> _webSocket_recv serverConn
+            firstPage = fmapMaybe getRight $ tag (current route) postBuild
+            messageEv = leftmost [ fmapMaybe getRight (updated route)
+                                 , firstPage
+                                 ]
 
-        serverConn <- webSocket "ws://localhost:8000"
-            (def { _webSocketConfig_send = ((:[]) . S.encode)
-                    <$> fmapMaybe getRight (updated route) })
+        (badMsg, goodMsg) <- connection messageEv
 
         pageNav <- divClass "main-wrapper clearfix" $ do
-            rec pageNavEvent <- widgetHold Pages.Home.page $ pageMap <$> navigationEvent
+            rec pageNavEvent <- widgetHold initialWidget $ pageMap <$> goodMsg
 
                 let navigationEvent = leftmost [topEvent, switch $ current pageNavEvent]
 
@@ -48,6 +49,17 @@ main = mainWidgetWithHead' $ (,) pageHead $ \ _ -> do
 
     return ()
     where
+        getRight = either (const Nothing) Just
+        initialWidget = text "Loading..." >> return never
+
+connection sendMessage = do
+    serverConn <- webSocket "ws://localhost:8000"
+        (def { _webSocketConfig_send = ((:[]) . S.encode) <$> sendMessage })
+    let dataEv :: Event _ (Either String Page)
+        dataEv = S.decode <$> _webSocket_recv serverConn
+    return (fmapMaybe getLeft dataEv, fmapMaybe getRight dataEv)
+    where
+        getLeft = either Just (const Nothing)
         getRight = either (const Nothing) Just
 
 pageMap :: (Reflex t, MonadFix m, DomBuilder t m, MonadHold t m, PostBuild t m, MonadIO m

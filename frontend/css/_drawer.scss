@@ -1,14 +1,12 @@
 .drawer {
   position: fixed;
-  width: 50px;
+  width: 240px;
   height: 100%;
   background-color: #333;
 
   transition: width 0.2s;
 
-  @media (min-width: 1200px) {
-    width: 240px;
-  }
+  z-index: 10;
 
   .home-link {
     margin: 0;
@@ -27,32 +25,55 @@
       &:hover {
         background-color: scale-color($anchor-color, $lightness: -15%);
       }
+
+      @media (max-width: 1199px) {
+        span {
+          display: none;
+        }
+      }
     }
   }
 
   ul {
-    margin-top: 16px;
+    margin: 16px 0 0;
+    list-style-type: none;
 
     li {
       color: #b3b3b3;
+      border-left: 3px solid #333;
       transition: color 0.25s ease-out;
 
       &:hover {
-        color: white;
-
         .fa-circle::before {
           opacity: 1;
         }
+
+        @media (max-width: 1199px) {
+          .tooltip {
+            display: inline-block;
+          }
+        }
       }
 
-      .fa-li {
-        margin-top: 4px;
+      &.li-tournaments:hover {
+        color: #f4aa61;
+      }
+
+      &.li-results:hover {
+        color: #d5ce7d;
+      }
+
+      &.li-rankings:hover {
+        color: #7db5cd;
+      }
+
+      .fa {
+        padding: 5px 14px;
       }
 
       .fa-circle {
         float: right;
-        margin-right: 15px;
-        margin-top: 7px;
+        margin-top: 1px;
 
         &::before {
           opacity: 0;
@@ -64,6 +85,37 @@
         color: inherit;
         display: block;
         padding: 3px 0;
+      }
+
+      .tooltip {
+        background: black;
+        border-radius: 3px;
+        color: white;
+        display: none;
+        font-size: 13px;
+        left: 55px;
+        padding: 2px 5px;
+        position: absolute;
+        margin-top: 1px;
+
+        .tooltip-arrow {
+          border-right-color: black !important;
+          position: absolute;
+          display: block;
+          left: -10px;
+          margin-top: 5px;
+          border: 5px solid transparent;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 1199px) {
+    width: 50px;
+
+    ul li a {
+      .fa-circle, span {
+        display: none;
       }
     }
   }

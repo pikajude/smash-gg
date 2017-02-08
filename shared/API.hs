@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module API where
 
@@ -8,6 +9,7 @@ import Data.Serialize.Text ()
 import Data.Text
 import GHC.Generics
 import Web.Routes.PathInfo
+import Web.Routes.TH
 
 data Request = RequestPage Page
 
@@ -22,7 +24,7 @@ data Page = Home
           | Tournament Text
         deriving (Show, Eq, Ord, Generic)
 
-instance PathInfo Page
+derivePathInfo' (\ x -> if x == "Home" then "" else standard x) ''Page
 
 data Tournament = T
                 { preview   :: Text

@@ -150,12 +150,16 @@ askDomWindow = error "askDomWindow is only available to ghcjs"
 
 -------------------------------------------------------------------------------
 getPopState :: (MonadWidget t m) => m (Event t URI)
+#ifdef ghcjs_HOST_OS
 getPopState = do
   window <- askDomWindow
   wrapDomEventMaybe window (`on` popState) $ liftIO $ do
     Just loc <- getLocation window
     locStr <- toString loc
     return . hush $ U.parseURI U.laxURIParserOptions (T.encodeUtf8 locStr)
+#else
+getPopState = pure never
+#endif
 
 
 -------------------------------------------------------------------------------
@@ -190,7 +194,11 @@ getLoc = error "getLocation' is only available to ghcjs"
 -------------------------------------------------------------------------------
 -- | (Unsafely) get the URL text of a window
 getUrlText :: (HasWebView m, MonadIO m) => m T.Text
+#if ghcjs_HOST_OS
 getUrlText = getLoc >>= liftIO . toString
+#else
+getUrlText = pure "http://localhost/"
+#endif
 
 
 -------------------------------------------------------------------------------

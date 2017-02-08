@@ -22,11 +22,14 @@ executable backend
   build-depends:       base >=4.9 && <4.10
                      , cereal
                      , cereal-text
+                     , directory
                      , http-types
                      , text
                      , wai
+                     , wai-app-static
                      , wai-websockets
                      , warp
+                     , web-routes
                      , websockets
   hs-source-dirs:      src, ../shared
   default-language:    Haskell2010
