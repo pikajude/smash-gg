@@ -16,11 +16,30 @@ import           Network.Wai.Application.Static
 import           Network.Wai.Handler.Warp
 import           Network.Wai.Handler.WebSockets
 import           Network.WebSockets
+import           System.Console.ANSI
 import           System.Directory
+import           System.Exit
 import           System.IO
+import           System.Process
 
 main :: IO ()
 main = do
+    setSGR [SetConsoleIntensity BoldIntensity]
+    putStrLn "Compiling subproject"
+    setSGR [Reset]
+    hFlush stdout
+
+    cwd <- getCurrentDirectory
+    ph <- runProcess "cabal" ["build"] (Just $ cwd <> "/../frontend") Nothing Nothing Nothing Nothing
+    ec <- waitForProcess ph
+    unless (ec == ExitSuccess) $
+        die "Failed to run cabal build"
+
+    setSGR [SetConsoleIntensity BoldIntensity]
+    putStrLn "Running test server"
+    setSGR [Reset]
+    hFlush stdout
+
     serverThread <- forkIO $ do
         s <- getCurrentDirectory
         let set_ = defaultFileServerSettings (s <> "/../frontend/dist/build/frontend/frontend.jsexe")
@@ -38,7 +57,7 @@ wsApp pc = acceptRequest pc >>= \ conn -> forever $ do
     case req' of
         Left s -> putStrLn s
         Right req -> do
-            liftIO $ print (req :: Page)
-            sendBinaryData conn $ S.encode req
+            liftIO $ print (req :: API.Request)
+            sendBinaryData conn $ S.encode $ HomeR []
 
 fallback _ resp = resp $ responseLBS status400 [] "Not a websocket request"

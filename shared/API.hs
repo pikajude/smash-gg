@@ -1,66 +1,86 @@
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE QuasiQuotes                #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 module API where
 
 import Data.Serialize
 import Data.Serialize.Text ()
 import Data.Text
+import Database.Persist.TH
 import GHC.Generics
 import Web.Routes.PathInfo
 import Web.Routes.TH
 
-data Request = RequestPage Page
+share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
+Tournament
+    preview Text
+    date Text
+    location Text Maybe
+    attendees Int
+    slug Text
+    name Text
+    started Bool
+    deriving Generic Show
 
-data Page = Home
-          | Tournaments
-          | Results
-          | Rankings
-          | UserHome
+Event
+    name Text
+    deriving Generic Show
 
-          | Attendees Text
-          | Events Text
-          | Tournament Text
-        deriving (Show, Eq, Ord, Generic)
+TournamentEvent
+    tournamentId TournamentId
+    eventId EventId
+    UniqueTournamentEvent tournamentId eventId
+|]
 
-derivePathInfo' (\ x -> if x == "Home" then "" else standard x) ''Page
+data Request = Home
+             | Tournaments
+             | Results
+             | Rankings
+             | UserHome
 
-data Tournament = T
-                { preview   :: Text
-                , date      :: Text
-                , location  :: Maybe Text
-                , events    :: [Text]
-                , attendees :: Integer
-                , slug      :: Text
-                , name      :: Text
-                , started   :: Bool
-                } deriving (Generic)
+             | Attendees Text
+             | Events Text
+             | T Text
+             deriving (Show, Generic)
 
-instance Serialize Page
+data Response = HomeR [(Tournament, [Event])]
+              | TournamentsR
+              | ResultsR
+              | RankingsR
+              | UserHomeR
+
+              | AttendeesR
+              | EventsR
+              | TournamentR
+              deriving Generic
+
+derivePathInfo' (\ x -> if x == "Home" then "" else standard x) ''Request
+
 instance Serialize Tournament
+instance Serialize Event
+instance Serialize Request
+instance Serialize Response
 
-g4 = T { preview = "https://img.youtube.com/vi/-EBtG37v60I/mqdefault.jpg"
-       , date = "January 20-22 2017"
-       , location = Just "CA (NorCal)"
-       , events = [ "Wii U Singles", "Wii U Doubles", "World Crews: Smash 4 Wii U"
-                  , "Smash 64 Singles", "Smash 64 Doubles", "Street Fighter V Singles"
-                  , "Rivals of Aether Singles", "Towerfall Singles", "Catherine Singles"
-                  , "Smash Draft", "Melee Singles", "Red Bull Ladder", "Melee Doubles"
-                  , "Evening Ladder" ]
-       , attendees = 3576
-       , slug = "genesis-4"
-       , name = "Genesis 4"
-       , started = True
-       }
+g4 = Tournament { tournamentPreview = "https://img.youtube.com/vi/-EBtG37v60I/mqdefault.jpg"
+                , tournamentDate = "January 20-22 2017"
+                , tournamentLocation = Just "CA (NorCal)"
+                , tournamentAttendees = 3576
+                , tournamentSlug = "genesis-4"
+                , tournamentName = "Genesis 4"
+                , tournamentStarted = True
+                }
 
-beast7 = T { preview = "https://img.youtube.com/vi/AUEBdKaikMo/mqdefault.jpg"
-           , date = "February 17-19 2017"
-           , location = Just "Sweden"
-           , events = [ "Smash 64 Singles", "Wii U Singles", "Wii U Doubles"
-                      , "Melee Doubles", "Melee Singles", "Street Fighter V Singles" ]
-           , attendees = 635
-           , slug = "beast-7"
-           , name = "BEAST 7"
-           , started = False
-           }
+beast7 = Tournament { tournamentPreview = "https://img.youtube.com/vi/AUEBdKaikMo/mqdefault.jpg"
+                    , tournamentDate = "February 17-19 2017"
+                    , tournamentLocation = Just "Sweden"
+                    , tournamentAttendees = 635
+                    , tournamentSlug = "beast-7"
+                    , tournamentName = "BEAST 7"
+                    , tournamentStarted = False
+                    }

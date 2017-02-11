@@ -7,7 +7,8 @@
 
 module Pages.Home where
 
-import           API
+import           API                    hiding (Event)
+import qualified API                    (Event)
 import           Control.Monad
 import           Control.Monad.Fix
 import           Control.Monad.IO.Class
@@ -18,7 +19,7 @@ import           GHCJS.DOM.Types        (IsElement)
 import           GHCJS.DOM.Utils
 import           Reflex.Dom
 
-banner = do
+banner _ = do
     rec (b, l) <- elClass' "div" "banner" $ do
             divClass "bg" blank
             parentWidth <- fmap fst <$> elementSize b
@@ -42,39 +43,40 @@ banner = do
 
 carouselEntry :: forall a m t .
               (PostBuild t m, DomBuilder t m, MonadFix m, Show a, Num a, MonadHold t m)
-              => Dynamic t (Int, a) -> (Int, Tournament) -> m (Event t Page)
-carouselEntry sizeDyn (ix1, T{..}) = elDynAttr "div" itemAttrs $ divClass "row" $ do
-    divClass "columns large-7" $ elAttr "img" ("src" =: preview) $ return ()
+              => Dynamic t (Int, a) -> (Int, Tournament) -> m (Event t API.Request)
+carouselEntry sizeDyn (ix1, Tournament{..}) = elDynAttr "div" itemAttrs $ divClass "row" $ do
+    divClass "columns large-7" $ elAttr "img" ("src" =: tournamentPreview) $ return ()
 
     divClass "columns large-5" $ do
-        tourneyLink <- el "h3" $ link name
+        tourneyLink <- el "h3" $ link tournamentName
 
         attendLink <- divClass "tournament-info" $ do
             aLink <- elClass "ul" "fa-ul" $ do
                 el "li" $ do
                     elClass "i" "fa-li fa fa-calendar" blank
-                    text date
-                forM_ location $ \ l -> el "li" $ do
+                    text tournamentDate
+                forM_ tournamentLocation $ \ l -> el "li" $ do
                     elClass "i" "fa-li fa fa-map-marker" blank
                     text l
-                l1 <- el "li" $ do
-                    let (shown, unshown) = splitAt 4 events
-                    elClass "i" "fa-li fa fa-gamepad" blank
-                    text $ T.intercalate ", " shown
-                    el "br" blank
-                    if null unshown
-                        then return never
-                        else fmap _link_clicked $ link $ T.pack $ "show " ++ show (length unshown) ++ " more events"
+                -- l1 <- el "li" $ do
+                --     let (shown, unshown) = splitAt 4 events
+                --     elClass "i" "fa-li fa fa-gamepad" blank
+                --     text $ T.intercalate ", " shown
+                --     el "br" blank
+                --     if null unshown
+                --         then return never
+                --         else fmap _link_clicked $ link $ T.pack $ "show " ++ show (length unshown) ++ " more events"
                 l2 <- el "li" $ do
                     elClass "i" "fa-li fa fa-users" blank
-                    link $ T.pack $ show attendees ++ " Attendees"
+                    link $ T.pack $ show tournamentAttendees ++ " Attendees"
 
-                return $ leftmost [ Events slug <$ l1
-                                  , Attendees slug <$ _link_clicked l2
+                return $ leftmost [ {- Events slug <$ l1
+                                  , -} Attendees tournamentSlug <$ _link_clicked l2
                                   ]
 
-            let (btn1, btn2) = if started then ("Brackets", "Shop")
-                                          else ("Register", "Compendium")
+            let (btn1, btn2) = if tournamentStarted
+                                   then ("Brackets", "Shop")
+                                   else ("Register", "Compendium")
 
             elClass "a" "button large" $ text btn1
             text " "
@@ -86,14 +88,14 @@ carouselEntry sizeDyn (ix1, T{..}) = elDynAttr "div" itemAttrs $ divClass "row" 
 
             return aLink
 
-        return $ leftmost [ Tournament slug <$ _link_clicked tourneyLink, attendLink ]
+        return $ leftmost [ T tournamentSlug <$ _link_clicked tourneyLink, attendLink ]
     where
         itemAttrs = ffor sizeDyn $
             \ (i, w) -> ("class" =: ("carousel-item" <> bool " hidden" "" (i == ix1))
                       <> "style" =: T.pack ("width: " ++ show (w - 120) ++ "px"))
 
-page = do
-    (divEl, e) <- banner
+page (HomeR ts) = do
+    (divEl, e) <- banner ts
     text "Hello, world"
     rec (d, _) <- elClass' "div" "test" $ display =<< elementSize d
     return e

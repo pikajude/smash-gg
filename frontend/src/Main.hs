@@ -6,7 +6,8 @@
 
 module Main where
 
-import           API
+import           API                    hiding (Event)
+import qualified API                    (Event)
 import           Control.Monad.Fix
 import           Control.Monad.IO.Class
 import           Data.ByteString        (ByteString)
@@ -30,7 +31,7 @@ main = mainWidgetWithHead' $ (,) pageHead $ \ _ -> do
     postBuild <- getPostBuild
 
     rec routeText <- partialPathRoute "" (toPathInfo <$> pageNav)
-        let route :: Dynamic _ (Either String Page)
+        let route :: Dynamic _ (Either String API.Request)
             route = parseSegments fromPathSegments <$> routeText
 
             firstPage = fmapMaybe getRight $ tag (current route) postBuild
@@ -55,7 +56,7 @@ main = mainWidgetWithHead' $ (,) pageHead $ \ _ -> do
 connection sendMessage = do
     serverConn <- webSocket "ws://localhost:8000"
         (def { _webSocketConfig_send = ((:[]) . S.encode) <$> sendMessage })
-    let dataEv :: Event _ (Either String Page)
+    let dataEv :: Event _ (Either String API.Response)
         dataEv = S.decode <$> _webSocket_recv serverConn
     return (fmapMaybe getLeft dataEv, fmapMaybe getRight dataEv)
     where
@@ -65,11 +66,11 @@ connection sendMessage = do
 pageMap :: (Reflex t, MonadFix m, DomBuilder t m, MonadHold t m, PostBuild t m, MonadIO m
            , IsElement (RawElement (DomBuilderSpace m)), HasWebView m, TriggerEvent t m
            , MonadIO (Performable m), PerformEvent t m)
-        => Page -> m (Event t Page)
-pageMap Home     = Pages.Home.page
-pageMap Results  = Pages.Results.page
-pageMap Rankings = Pages.Rankings.page
+        => API.Response -> m (Event t API.Request)
+pageMap p@HomeR{}   = Pages.Home.page p
+pageMap p@ResultsR  = Pages.Results.page p
+pageMap p@RankingsR = Pages.Rankings.page p
 
 pageHead _ = do
-    el "title" $ text "Hello, world!"
+    el "title" $ text "smash.gg"
     elAttr "style" ("type" =: "text/css") $ text $ decodeUtf8 css

@@ -2,6 +2,6 @@ module Pages.Results where
 
 import Reflex.Dom
 
-page = do
+page _ = do
     divClass "columns" $ text "Results page"
     return never

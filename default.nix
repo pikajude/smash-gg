@@ -88,7 +88,7 @@ let
     version = "${drv.version}-${versionTag}";
   })).overrideScope (self: super: {
     mkDerivation = args: super.mkDerivation (args // {
-      doHaddock = !(builtins.elem args.pname [ "MemoTrie" "fail" "text" ]);
+      doHaddock = !(builtins.elem args.pname [ "MemoTrie" "fail" "text" "nats" ]);
     });
   });
 

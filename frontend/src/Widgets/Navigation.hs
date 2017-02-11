@@ -10,7 +10,7 @@ import Data.Text   (Text)
 import Reflex.Dom  hiding (Home)
 
 data Item = Item
-          { dest      :: Page
+          { dest      :: API.Request
           , linkText  :: Text
           , liClass   :: Text
           , iconClass :: Text
